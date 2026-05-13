@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Cart</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #eaeded;
+            font-family: Arial;
+        }
+
+        .cart-page {
+
+            max-width: 1300px;
+
+            margin: 30px auto;
+
+            display: flex;
+
+            gap: 20px;
+
+            flex-wrap: wrap;
+        }
+
+        .cart-left {
+
+            flex: 3;
+
+            background: white;
+
+            border-radius: 10px;
+
+            padding: 20px;
+        }
+
+        .cart-right {
+
+            flex: 1;
+
+            background: white;
+
+            border-radius: 10px;
+
+            padding: 20px;
+
+            height: fit-content;
+        }
+
+        .cart-item {
+
+            display: flex;
+
+            gap: 20px;
+
+            padding: 20px 0;
+
+            border-bottom: 1px solid #ddd;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+        }
+
+        .cart-item img {
+
+            width: 180px;
+            height: 180px;
+
+            object-fit: contain;
+        }
+
+        .item-info {
+
+            flex: 1;
+        }
+
+        .item-info h2 {
+
+            font-size: 24px;
+
+            margin-bottom: 10px;
+        }
+
+        .price {
+
+            color: #b12704;
+
+            font-size: 24px;
+
+            font-weight: bold;
+
+            margin: 10px 0;
+        }
+
+        .qty-box {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-top: 15px;
+
+            flex-wrap: wrap;
+        }
+
+        .qty-btn {
+
+            width: 35px;
+            height: 35px;
+
+            border: none;
+
+            border-radius: 50%;
+
+            background: #ffd814;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+            font-weight: bold;
+        }
+
+        .remove-btn {
+
+            background: #cc0c39;
+
+            color: white;
+
+            border: none;
+
+            padding: 10px 18px;
+
+            border-radius: 20px;
+
+            cursor: pointer;
+        }
+
+        .checkout-btn {
+
+            width: 100%;
+
+            padding: 15px;
+
+            border: none;
+
+            border-radius: 25px;
+
+            background: #ffd814;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            margin-top: 20px;
+        }
+
+        .checkout-btn:hover {
+            background: #f7ca00;
+        }
+
+        .clear-btn {
+
+            width: 100%;
+
+            padding: 15px;
+
+            border: none;
+
+            border-radius: 25px;
+
+            background: #ea4335;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            margin-top: 15px;
+        }
+
+        .empty-cart {
+
+            text-align: center;
+
+            padding: 50px;
+        }
+
+        @media(max-width:768px) {
+
+            .cart-page {
+                padding: 10px;
+            }
+
+            .item-info h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <header class="amazon-header">
+
+        <div class="logo">
+            <h2>MyStore</h2>
+        </div>
+
+    </header>
+
+    <!-- CART PAGE -->
+
+    <div class="cart-page">
+
+        <div class="cart-left">
+
+            <h1>
+
+                Shopping Cart
+
+            </h1>
+
+            <div id="cart-items"></div>
+
+        </div>
+
+        <div class="cart-right">
+
+            <h2>
+
+                Order Summary
+
+            </h2>
+
+            <br>
+
+            <h3 id="total">
+
+                Total: ₹0
+
+            </h3>
+
+            <button class="checkout-btn" onclick="goCheckout()">
+
+                Proceed To Checkout
+
+            </button>
+
+            <button class="clear-btn" onclick="clearCart()">
+
+                Clear Cart
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let cart =
+            JSON.parse(localStorage.getItem("cart"))
+            || [];
+
+        const container =
+            document.getElementById("cart-items");
+
+        function renderCart() {
+
+            container.innerHTML = "";
+
+            let total = 0;
+
+            if (cart.length === 0) {
+
+                container.innerHTML = `
+
+                    <div class="empty-cart">
+
+                        <h2>
+
+                            Your Cart Is Empty
+
+                        </h2>
+
+                    </div>
+
+                `;
+
+                document.getElementById(
+                    "total"
+                ).innerText =
+                    "Total: ₹0";
+
+                return;
+            }
+
+            cart.forEach((item, index) => {
+
+                if (!item.qty) {
+
+                    item.qty = 1;
+                }
+
+                total += item.price * item.qty;
+
+                const div =
+                    document.createElement("div");
+
+                div.className =
+                    "cart-item";
+
+                div.innerHTML = `
+
+                <img src="${item.thumbnail}">
+
+                <div class="item-info">
+
+                    <h2>
+
+                        ${item.title}
+
+                    </h2>
+
+                    <div class="price">
+
+                        ₹${item.price}
+
+                    </div>
+
+                    <p>
+
+                        ${item.description}
+
+                    </p>
+
+                    <div class="qty-box">
+
+                        <button
+                            class="qty-btn"
+                            onclick="decreaseQty(${index})"
+                        >
+
+                            -
+
+                        </button>
+
+                        <span>
+
+                            Qty:
+                            ${item.qty}
+
+                        </span>
+
+                        <button
+                            class="qty-btn"
+                            onclick="increaseQty(${index})"
+                        >
+
+                            +
+
+                        </button>
+
+                        <button
+                            class="remove-btn"
+                            onclick="removeItem(${index})"
+                        >
+
+                            Remove
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                `;
+
+                container.appendChild(div);
+            });
+
+            document.getElementById(
+                "total"
+            ).innerText =
+                "Total: ₹" + total.toFixed(2);
+        }
+
+        function increaseQty(index) {
+
+            cart[index].qty++;
+
+            saveCart();
+        }
+
+        function decreaseQty(index) {
+
+            if (cart[index].qty > 1) {
+
+                cart[index].qty--;
+
+                saveCart();
+            }
+        }
+
+        function removeItem(index) {
+
+            cart.splice(index, 1);
+
+            saveCart();
+        }
+
+        function clearCart() {
+
+            cart = [];
+
+            saveCart();
+        }
+
+        function saveCart() {
+
+            localStorage.setItem(
+                "cart",
+                JSON.stringify(cart)
+            );
+
+            renderCart();
+        }
+
+        function goCheckout() {
+
+            window.location.href =
+                "checkout.html";
+        }
+
+        renderCart();
+
+    </script>
+
+</body>
+
+</html>
