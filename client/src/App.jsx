@@ -1,101 +1,149 @@
-import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
-import axios from "axios"
-import API from "./config/api"
+import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Cart from "./pages/Cart";
+import Wishlist from "./pages/Wishlist";
+import ProductDetails from "./pages/ProductDetails";
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // 🔐 USER AUTH STATE
+  const [user, setUser] = useState(null);
 
-  // 🛒 NEW: products state
-  const [products, setProducts] = useState([])
+  // 🛒 CART STATE
+  const [cart, setCart] = useState([]);
 
-  useEffect(() => {
-    axios.get(`${API}/api/products`)
-      .then((res) => {
-        setProducts(res.data)
-      })
-      .catch((err) => {
-        console.log("Error fetching products:", err)
-      })
-  }, [])
+  // ❤️ WISHLIST STATE
+  const [wishlist, setWishlist] = useState([]);
+
+  // 🔍 SEARCH STATE
+  const [search, setSearch] = useState("");
+
+  // ➕ ADD TO CART
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const exists = prev.find((p) => p._id === product._id);
+
+      if (exists) {
+        return prev.map((p) =>
+          p._id === product._id
+            ? { ...p, qty: p.qty + 1 }
+            : p
+        );
+      }
+
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  // ➖ REMOVE FROM CART
+  const removeFromCart = (id) => {
+    setCart((prev) =>
+      prev.filter((item) => item._id !== id)
+    );
+  };
+
+  // ❤️ WISHLIST TOGGLE
+  const toggleWishlist = (product) => {
+    setWishlist((prev) => {
+      const exists = prev.find((p) => p._id === product._id);
+
+      if (exists) {
+        return prev.filter((p) => p._id !== product._id);
+      }
+
+      return [...prev, product];
+    });
+  };
 
   return (
-    <>
-      {/* ===== YOUR ORIGINAL UI (UNCHANGED) ===== */}
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <BrowserRouter>
 
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+      {/* 🌐 NAVBAR */}
+      <Navbar
+        user={user}
+        cart={cart}
+        wishlist={wishlist}
+        search={search}
+        setSearch={setSearch}
+      />
 
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      <Routes>
 
-      {/* ===== 🛒 NEW PRODUCT SECTION (ADDED BELOW YOUR UI) ===== */}
-      <section style={{ padding: "30px" }}>
-        <h2>🛒 Products from Backend</h2>
+        {/* 🏠 HOME */}
+        <Route
+          path="/"
+          element={
+            <Home
+              addToCart={addToCart}
+              toggleWishlist={toggleWishlist}
+              wishlist={wishlist}
+              search={search}
+            />
+          }
+        />
 
-        {products.length === 0 ? (
-          <p>Loading products...</p>
-        ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "15px"
-          }}>
-            {products.map((p) => (
-              <div key={p._id} style={{
-                border: "1px solid #ddd",
-                padding: "10px",
-                borderRadius: "10px"
-              }}>
-                <h3>{p.name}</h3>
-                <p>₹ {p.price}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+        {/* 🔐 LOGIN */}
+        <Route
+          path="/login"
+          element={<Login setUser={setUser} />}
+        />
 
-      {/* ===== REST YOUR ORIGINAL UI ===== */}
-      <div className="ticks"></div>
+        {/* 🛒 CART */}
+        <Route
+          path="/cart"
+          element={
+            <Cart
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+            />
+          }
+        />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-        </div>
+        {/* ❤️ WISHLIST */}
+        <Route
+          path="/wishlist"
+          element={
+            <Wishlist
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              addToCart={addToCart}
+            />
+          }
+        />
 
-        <div id="social">
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-        </div>
-      </section>
+        {/* 📦 PRODUCT DETAILS */}
+        <Route
+          path="/product/:id"
+          element={
+            <ProductDetails
+              addToCart={addToCart}
+              toggleWishlist={toggleWishlist}
+              wishlist={wishlist}
+            />
+          }
+        />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* 💳 CHECKOUT */}
+        <Route
+          path="/checkout"
+          element={<Checkout cart={cart} />}
+        />
+
+        {/* 🧾 ORDERS */}
+        <Route
+          path="/orders"
+          element={<Orders />}
+        />
+
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
