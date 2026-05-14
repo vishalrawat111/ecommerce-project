@@ -52,57 +52,29 @@ function App() {
         setSearch={setSearch}
       />
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Home
-              addToCart={addToCart}
-              toggleWishlist={toggleWishlist}
-              wishlist={wishlist}
-              search={search}
-            />
-          }
-        />
+      {/* Full Width Container */}
+      <div style={{ width: "100%", margin: 0, padding: 0, overflowX: "hidden" }}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                addToCart={addToCart}
+                toggleWishlist={toggleWishlist}
+                wishlist={wishlist}
+                search={search}
+              />
+            }
+          />
 
-        <Route path="/login" element={<Login setUser={setUser} />} />
-
-        <Route
-          path="/cart"
-          element={
-            <Cart
-              cart={cart}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-            />
-          }
-        />
-
-        <Route
-          path="/wishlist"
-          element={
-            <Wishlist
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
-              addToCart={addToCart}
-            />
-          }
-        />
-
-        <Route
-          path="/product/:id"
-          element={
-            <ProductDetails
-              addToCart={addToCart}
-              toggleWishlist={toggleWishlist}
-              wishlist={wishlist}
-            />
-          }
-        />
-
-        <Route path="/checkout" element={<Checkout cart={cart} />} />
-        <Route path="/orders" element={<Orders />} />
-      </Routes>
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/cart" element={<Cart cart={cart} addToCart={addToCart} removeFromCart={removeFromCart} />} />
+          <Route path="/wishlist" element={<Wishlist wishlist={wishlist} toggleWishlist={toggleWishlist} addToCart={addToCart} />} />
+          <Route path="/product/:id" element={<ProductDetails addToCart={addToCart} toggleWishlist={toggleWishlist} wishlist={wishlist} />} />
+          <Route path="/checkout" element={<Checkout cart={cart} />} />
+          <Route path="/orders" element={<Orders />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
