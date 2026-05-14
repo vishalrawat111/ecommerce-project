@@ -4,29 +4,34 @@ import API from "../config/api";
 
 function Home({ addToCart, toggleWishlist, wishlist, search }) {
     const [products, setProducts] = useState([]);
-
-    // ⭐ RATING STATE
     const [ratings, setRatings] = useState({});
 
+    // ✅ FETCH PRODUCTS
     useEffect(() => {
         axios
             .get(`${API}/api/products`)
-            .then((res) => setProducts(res.data))
-            .catch((err) => console.log(err));
+            .then((res) => {
+                console.log("PRODUCTS LOADED:", res.data);
+                setProducts(res.data);
+            })
+            .catch((err) => console.log("API ERROR:", err));
     }, []);
 
-    // 🔍 SAFE SEARCH FILTER
-    const filteredProducts = products.filter((p) =>
-        (p.name || "")
-            .toLowerCase()
-            .includes(search.toLowerCase())
-    );
+    // ✅ SAFE SEARCH FILTER (FIXED)
+    const filteredProducts =
+        search && search.trim() !== ""
+            ? products.filter((p) =>
+                (p.name || "")
+                    .toLowerCase()
+                    .includes(search.toLowerCase())
+            )
+            : products;
 
-    // ⭐ HANDLE RATING
+    // ⭐ RATING
     const handleRating = (productId, value) => {
         setRatings((prev) => ({
             ...prev,
-            [productId]: value
+            [productId]: value,
         }));
     };
 
@@ -34,10 +39,12 @@ function Home({ addToCart, toggleWishlist, wishlist, search }) {
         <div style={{ padding: "20px" }}>
             <h2>🛍️ Products</h2>
 
-            {/* EMPTY STATE */}
-            {filteredProducts.length === 0 && (
+            {/* ✅ LOADING + EMPTY STATE FIXED */}
+            {products.length === 0 ? (
+                <p>Loading products...</p>
+            ) : filteredProducts.length === 0 ? (
                 <p>No products found 😢</p>
-            )}
+            ) : null}
 
             <div
                 style={{
@@ -72,7 +79,7 @@ function Home({ addToCart, toggleWishlist, wishlist, search }) {
                             <h3>{p.name}</h3>
                             <p>₹ {p.price}</p>
 
-                            {/* ⭐ RATING SYSTEM */}
+                            {/* ⭐ RATING */}
                             <div style={{ margin: "5px 0" }}>
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <span
@@ -84,8 +91,7 @@ function Home({ addToCart, toggleWishlist, wishlist, search }) {
                                             cursor: "pointer",
                                             fontSize: "18px",
                                             color:
-                                                (ratings[p._id] || 0) >=
-                                                    star
+                                                (ratings[p._id] || 0) >= star
                                                     ? "gold"
                                                     : "gray",
                                         }}
@@ -99,9 +105,7 @@ function Home({ addToCart, toggleWishlist, wishlist, search }) {
                             <button
                                 onClick={() => toggleWishlist(p)}
                                 style={{
-                                    background: isLiked
-                                        ? "red"
-                                        : "#eee",
+                                    background: isLiked ? "red" : "#eee",
                                     color: isLiked ? "white" : "black",
                                     marginRight: "10px",
                                 }}
@@ -109,7 +113,7 @@ function Home({ addToCart, toggleWishlist, wishlist, search }) {
                                 ❤️
                             </button>
 
-                            {/* 🛒 Add to cart */}
+                            {/* 🛒 Cart */}
                             <button onClick={() => addToCart(p)}>
                                 Add to Cart
                             </button>

@@ -11,59 +11,39 @@ import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 
 function App() {
-  // 🔐 USER AUTH STATE
   const [user, setUser] = useState(null);
-
-  // 🛒 CART STATE
   const [cart, setCart] = useState([]);
-
-  // ❤️ WISHLIST STATE
   const [wishlist, setWishlist] = useState([]);
-
-  // 🔍 SEARCH STATE
   const [search, setSearch] = useState("");
 
-  // ➕ ADD TO CART
   const addToCart = (product) => {
     setCart((prev) => {
       const exists = prev.find((p) => p._id === product._id);
-
       if (exists) {
         return prev.map((p) =>
-          p._id === product._id
-            ? { ...p, qty: p.qty + 1 }
-            : p
+          p._id === product._id ? { ...p, qty: p.qty + 1 } : p
         );
       }
-
       return [...prev, { ...product, qty: 1 }];
     });
   };
 
-  // ➖ REMOVE FROM CART
   const removeFromCart = (id) => {
-    setCart((prev) =>
-      prev.filter((item) => item._id !== id)
-    );
+    setCart((prev) => prev.filter((item) => item._id !== id));
   };
 
-  // ❤️ WISHLIST TOGGLE
   const toggleWishlist = (product) => {
     setWishlist((prev) => {
       const exists = prev.find((p) => p._id === product._id);
-
       if (exists) {
         return prev.filter((p) => p._id !== product._id);
       }
-
       return [...prev, product];
     });
   };
 
   return (
     <BrowserRouter>
-
-      {/* 🌐 NAVBAR */}
       <Navbar
         user={user}
         cart={cart}
@@ -73,8 +53,6 @@ function App() {
       />
 
       <Routes>
-
-        {/* 🏠 HOME */}
         <Route
           path="/"
           element={
@@ -87,13 +65,8 @@ function App() {
           }
         />
 
-        {/* 🔐 LOGIN */}
-        <Route
-          path="/login"
-          element={<Login setUser={setUser} />}
-        />
+        <Route path="/login" element={<Login setUser={setUser} />} />
 
-        {/* 🛒 CART */}
         <Route
           path="/cart"
           element={
@@ -105,7 +78,6 @@ function App() {
           }
         />
 
-        {/* ❤️ WISHLIST */}
         <Route
           path="/wishlist"
           element={
@@ -117,7 +89,6 @@ function App() {
           }
         />
 
-        {/* 📦 PRODUCT DETAILS */}
         <Route
           path="/product/:id"
           element={
@@ -129,18 +100,8 @@ function App() {
           }
         />
 
-        {/* 💳 CHECKOUT */}
-        <Route
-          path="/checkout"
-          element={<Checkout cart={cart} />}
-        />
-
-        {/* 🧾 ORDERS */}
-        <Route
-          path="/orders"
-          element={<Orders />}
-        />
-
+        <Route path="/checkout" element={<Checkout cart={cart} />} />
+        <Route path="/orders" element={<Orders />} />
       </Routes>
     </BrowserRouter>
   );
