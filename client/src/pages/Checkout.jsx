@@ -9,28 +9,37 @@ function Checkout({ cart }) {
     const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("cod");
 
+    const BACKEND_URL = "https://ecommerce-backend-4qff.onrender.com";
+
     const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-    // ================= RAZORPAY PAYMENT =================
+    // ================= PAYMENT HANDLER =================
     const handlePayment = async () => {
         if (!address.trim()) {
             alert("Please enter your delivery address");
             return;
         }
 
+        if (cart.length === 0) {
+            alert("Cart is empty");
+            return;
+        }
+
+        // COD ORDER
         if (paymentMethod === "cod") {
             placeCODOrder();
             return;
         }
 
-        // Razorpay Payment
+        // ONLINE PAYMENT (RAZORPAY)
         try {
             setLoading(true);
 
-            // Step 1: Backend se Order Create karo
-            const { data } = await axios.post("http://localhost:5000/api/payment/create-order", {
-                amount: total,
-            });
+            // Step 1: Create Order on Backend
+            const { data } = await axios.post(
+                `${BACKEND_URL}/api/payment/create-order`,
+                { amount: total }
+            );
 
             if (!data.success) {
                 alert("Failed to create order");
@@ -39,17 +48,18 @@ function Checkout({ cart }) {
 
             // Step 2: Razorpay Options
             const options = {
-                key: "rzp_test_SorQbuRg24Cbkt", // Test Key
+                key: "rzp_test_SorQbuRg24Cbkt",
                 amount: data.order.amount,
                 currency: "INR",
                 name: "MyStore",
                 description: "Order Payment",
                 order_id: data.order.id,
+
                 handler: async function (response) {
-                    // Step 3: Payment Verify
                     try {
+                        // Step 3: Verify Payment
                         const verifyRes = await axios.post(
-                            "http://localhost:5000/api/payment/verify-payment",
+                            `${BACKEND_URL}/api/payment/verify-payment`,
                             {
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
@@ -58,7 +68,7 @@ function Checkout({ cart }) {
                         );
 
                         if (verifyRes.data.success) {
-                            alert("🎉 Payment Successful! Order Placed.");
+                            alert("🎉 Payment Successful!");
                             saveOrderToLocal(response.razorpay_payment_id);
                             navigate("/orders");
                         } else {
@@ -66,19 +76,22 @@ function Checkout({ cart }) {
                         }
                     } catch (err) {
                         console.error(err);
-                        alert("Something went wrong during verification");
+                        alert("Payment verification error");
                     }
                 },
+
                 prefill: {
-                    name: "Vishal",
-                    email: "vishal@example.com",
-                    contact: "9876543210",
+                    name: "Customer",
+                    email: "customer@example.com",
+                    contact: "9999999999",
                 },
+
                 theme: { color: "#e74c3c" },
             };
 
             const rzp = new window.Razorpay(options);
             rzp.open();
+
         } catch (error) {
             console.error(error);
             alert("Payment failed. Try again.");
@@ -87,32 +100,37 @@ function Checkout({ cart }) {
         }
     };
 
+    // ================= COD ORDER =================
     const placeCODOrder = () => {
         saveOrderToLocal("COD");
         alert("Order Placed Successfully (Cash on Delivery)");
         navigate("/orders");
     };
 
+    // ================= SAVE ORDER =================
     const saveOrderToLocal = (paymentId) => {
         const order = {
             items: cart,
             total,
             address,
-            paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment",
-            paymentId: paymentId,
+            paymentMethod,
+            paymentId,
             date: new Date().toLocaleString(),
             status: "Placed",
         };
 
         const oldOrders = JSON.parse(localStorage.getItem("orders")) || [];
-        localStorage.setItem("orders", JSON.stringify([...oldOrders, order]));
+        localStorage.setItem(
+            "orders",
+            JSON.stringify([...oldOrders, order])
+        );
     };
 
     return (
         <div style={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
             <h1>🛒 Checkout</h1>
 
-            {/* Address */}
+            {/* ADDRESS */}
             <div style={{ margin: "20px 0" }}>
                 <h3>Delivery Address</h3>
                 <textarea
@@ -120,11 +138,11 @@ function Checkout({ cart }) {
                     onChange={(e) => setAddress(e.target.value)}
                     rows="4"
                     style={{ width: "100%", padding: "10px" }}
-                    placeholder="Enter full address with pincode..."
+                    placeholder="Enter full address..."
                 />
             </div>
 
-            {/* Payment Method */}
+            {/* PAYMENT METHOD */}
             <div style={{ margin: "20px 0" }}>
                 <h3>Payment Method</h3>
                 <select
@@ -137,7 +155,7 @@ function Checkout({ cart }) {
                 </select>
             </div>
 
-            {/* Order Summary */}
+            {/* ORDER SUMMARY */}
             <div style={{ margin: "20px 0" }}>
                 <h3>Order Summary</h3>
                 {cart.map((item) => (
@@ -145,10 +163,10 @@ function Checkout({ cart }) {
                         {item.name} × {item.qty} = ₹{item.price * item.qty}
                     </p>
                 ))}
-                <h2>Total Amount: ₹{total}</h2>
+                <h2>Total: ₹{total}</h2>
             </div>
 
-            {/* Place Order Button */}
+            {/* BUTTON */}
             <button
                 onClick={handlePayment}
                 disabled={loading}
@@ -160,12 +178,14 @@ function Checkout({ cart }) {
                     color: "white",
                     border: "none",
                     borderRadius: "8px",
-                    cursor: loading ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                 }}
             >
-                {loading ? "Processing..." : paymentMethod === "cod"
-                    ? "Place COD Order"
-                    : "Pay Now with Razorpay"}
+                {loading
+                    ? "Processing..."
+                    : paymentMethod === "cod"
+                        ? "Place COD Order"
+                        : "Pay Now"}
             </button>
         </div>
     );
